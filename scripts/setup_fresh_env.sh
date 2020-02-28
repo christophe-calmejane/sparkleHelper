@@ -23,7 +23,7 @@ setupEnv()
 	getOS osName
 	if [[ $osName == "win" ]];
 	then
-		local baseSparkleFolder="${selfFolderPath}3rdparty/winsparkle"
+		local baseSparkleFolder="${selfFolderPath}../3rdparty/winsparkle"
 		if [[ ! -d "${baseSparkleFolder}/bin" || ! -d "${baseSparkleFolder}/include" || ! -d "${baseSparkleFolder}/lib" ]];
 		then
 			echo -n "Downloading WinSparkle... "
@@ -88,7 +88,7 @@ setupEnv()
 	elif [[ $osName == "mac" ]];
 	then
 		echo -n "Downloading Sparkle... "
-		local baseSparkleFolder="${selfFolderPath}3rdparty/sparkle"
+		local baseSparkleFolder="${selfFolderPath}../3rdparty/sparkle"
 		local result
 		result=$(which wget 2>&1)
 		if [ $? -ne 0 ];
