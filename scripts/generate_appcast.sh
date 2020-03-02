@@ -42,6 +42,7 @@ generateAppcast()
 	local dsaPrivKeyPath="$3"
 	local changelogURL="$4"
 	local installerURL="$5"
+	local installerArgs="$6"
 
 	local installerName="${installerPath##*/}"
 	local appcastFile="appcastItem-${installerVersion}.xml"
@@ -71,7 +72,7 @@ generateAppcast()
 	if isWindows;
 	then
 		echo "				sparkle:dsaSignature=\"${fileSignature}\"" >> "$appcastFile"
-		echo "				sparkle:installerArguments=\"/S /NOPCAP\"" >> "$appcastFile"
+		echo "				sparkle:installerArguments=\"${installerArgs}\"" >> "$appcastFile"
 		echo "				sparkle:os=\"windows\"" >> "$appcastFile"
 
 	elif isMac;
@@ -97,10 +98,10 @@ generateAppcast()
 
 printHelp()
 {
-	echo "Usage: generate_appcast.sh <Installer Path> <Installer Version> <DSA Private Key Path> <ChangeLog URL> <Installer URL>"
+	echo "Usage: generate_appcast.sh <Installer Path> <Installer Version> <DSA Private Key Path> <ChangeLog URL> <Installer URL> <Installer Arguments>"
 }
 
-if [ $# -ne 5 ]; then
+if [ $# -ne 6 ]; then
 	echo "ERROR: Missing parameters"
 	printHelp
 	exit 1
@@ -112,6 +113,6 @@ if [ ! -f "$1" ]; then
 	exit 1
 fi
 
-generateAppcast "$1" "$2" "$3" "$4" "$5"
+generateAppcast "$1" "$2" "$3" "$4" "$5" "$6"
 
 exit 0
