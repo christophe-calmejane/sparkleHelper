@@ -138,6 +138,8 @@ setupEnv()
 				rm -f "$spkloutputFile"
 				rm -rf "$spklOutputFolder"
 				echo "done"
+				echo "You need to manually codesign Sparkle Autoupdate bundle:"
+				echo "  codesign -s YourCodeSigningIdentityOrDash --timestamp --deep --strict --force --options=runtime ${baseSparkleFolder}/Sparkle.framework/Resources/Autoupdate.app"
 			fi
 		fi
 
