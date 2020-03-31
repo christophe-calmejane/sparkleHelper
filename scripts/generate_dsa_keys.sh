@@ -42,7 +42,7 @@ generateKeys()
 		then
 			echo "already found in resources, not generating new ones"
 		else
-			local generateKeys="3rdparty/sparkle/generate_keys"
+			local generateKeys="${selfFolderPath}../3rdparty/sparkle/generate_keys"
 			if [ ! -f "$generateKeys" ];
 			then
 				echo "failed, $generateKeys not found"
