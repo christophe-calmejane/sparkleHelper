@@ -12,9 +12,9 @@ generateKeys()
 	if [[ $osName == "win" ]];
 	then
 		echo -n "Generating DSA keys... "
-		local dsa_params="resources/dsa_param.pem"
-		local dsa_pub_key="resources/dsa_pub.pem"
-		local dsa_priv_key="resources/dsa_priv.pem"
+		local dsa_params="${outputFolder}/dsa_param.pem"
+		local dsa_pub_key="${outputFolder}/dsa_pub.pem"
+		local dsa_priv_key="${outputFolder}/dsa_priv.pem"
 		if [ -f "$dsa_pub_key" ];
 		then
 			echo "already found in resources, not generating new ones"
@@ -37,7 +37,7 @@ generateKeys()
 	elif [[ $osName == "mac" ]];
 	then
 		echo -n "Generating DSA keys... "
-		local dsa_pub_key="resources/dsa_pub.pem"
+		local dsa_pub_key="${outputFolder}/dsa_pub.pem"
 		if [ -f "$dsa_pub_key" ];
 		then
 			echo "already found in resources, not generating new ones"
@@ -64,7 +64,7 @@ generateKeys()
 
 	elif [[ $osName == "linux" ]];
 	then
-		local dsa_pub_key="resources/dsa_pub.pem"
+		local dsa_pub_key="${outputFolder}/dsa_pub.pem"
 		touch "$dsa_pub_key"
 
 	fi

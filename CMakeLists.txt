@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.13)
 # It should have 3 digits (x.y.z) on main branch, and 4 digits (x.y.z.w) on dev and task branches. The last digit being used as beta label.
 # As soon as a new version begins, update the version number by following SemVer rules.
 # Example: 1.5.0 is the upcoming release version (main branch) of current 1.5.0.3 devel version (dev/task) which will be labelled 1.5.0-beta3
-set(SPARKLEHELPER_VERSION 1.0.0.1)
+set(SPARKLEHELPER_VERSION 1.0.0.2)
 
 ############ Override from command line "CMake -D<OPTION>=TRUE/FALSE/0/1/ON/OFF"
 
@@ -54,64 +54,6 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake) # Required to fin
 ############ Define some variables
 
 set(SPARKLEHELPER_ROOT_DIR "${PROJECT_SOURCE_DIR}")
-#string(TIMESTAMP CURRENT_YEAR "%Y")
-#set(PROJECT_COPYRIGHT_YEAR "2017-${CURRENT_YEAR}")
-#set(PROJECT_FULL_NAME "${PROJECT_NAME} - Pro Audio Avdecc Controller")
-#set(PROJECT_COMPANYNAME "KikiSoft")
-#set(PROJECT_ORIGINAL_AUTHORS "Emilien Vallot and Christophe Calmejane")
-#set(PROJECT_AUTHORS "Emilien Vallot, Christophe Calmejane and other contributors")
-#set(PROJECT_CONTACT "christophe.calmejane@l-acoustics.com")
-#set(PROJECT_REVERSE_DOMAINNAME "fr.${PROJECT_COMPANYNAME}")
-#set(PROJECT_DOMAINNAME "${PROJECT_COMPANYNAME}.fr")
-#set(PROJECT_URL "https://github.com/christophe-calmejane/Hive")
-#set(PROJECT_LEGALCOPYRIGHT "(c) ${PROJECT_AUTHORS}")
-#set(PROJECT_READABLE_COPYRIGHT "Copyright ${PROJECT_COPYRIGHT_YEAR}, ${PROJECT_AUTHORS}")
-#set(PROJECT_ROOT_DIR "${PROJECT_SOURCE_DIR}")
-#set(PROJECT_ARCH "32-bit")
-#if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-#  set(PROJECT_ARCH "64-bit")
-#endif()
-
-## Split HIVE_VERSION string
-#string(REGEX MATCHALL "([0-9]+)" HIVE_VERSION_SPLIT "${HIVE_VERSION}")
-#list(LENGTH HIVE_VERSION_SPLIT HIVE_VERSION_SPLIT_LENGTH)
-#if(${HIVE_VERSION_SPLIT_LENGTH} LESS 3)
-#	message(FATAL_ERROR "Cannot parse version string")
-#endif()
-#list(GET HIVE_VERSION_SPLIT 0 HIVE_VERSION_MAJOR)
-#list(GET HIVE_VERSION_SPLIT 1 HIVE_VERSION_MINOR)
-#list(GET HIVE_VERSION_SPLIT 2 HIVE_VERSION_PATCH)
-#if(${HIVE_VERSION_SPLIT_LENGTH} EQUAL 4)
-#	list(GET HIVE_VERSION_SPLIT 3 HIVE_VERSION_BETA)
-#else()
-#	set(HIVE_VERSION_BETA "0")
-#endif()
-#
-## Compute Marketing Version String (Visible)
-#if(NOT DEFINED MARKETING_VERSION_DIGITS)
-#	set(MARKETING_VERSION_DIGITS 2)
-#endif()
-#set(HIVE_MARKETING_VERSION "")
-#if(${MARKETING_VERSION_DIGITS} GREATER 0)
-#	set(HIVE_MARKETING_VERSION "${HIVE_VERSION_MAJOR}")
-#	if(${MARKETING_VERSION_DIGITS} GREATER 1)
-#		math(EXPR LOOP_COUNT "${MARKETING_VERSION_DIGITS} - 1")
-#		foreach(index RANGE 1 ${LOOP_COUNT})
-#			list(GET HIVE_VERSION_SPLIT ${index} LOOP_VERSION)
-#			string(APPEND HIVE_MARKETING_VERSION ".${LOOP_VERSION}")
-#		endforeach()
-#	endif()
-#endif()
-#if(${MARKETING_VERSION_POSTFIX})
-#	string(APPEND HIVE_MARKETING_VERSION "${MARKETING_VERSION_POSTFIX}")
-#endif()
-#
-## Compute Full Friendly Version String (Visible)
-#if(${HIVE_VERSION_BETA} STREQUAL "0")
-#	set(HIVE_FRIENDLY_VERSION "${HIVE_VERSION_MAJOR}.${HIVE_VERSION_MINOR}.${HIVE_VERSION_PATCH}")
-#else()
-#	set(HIVE_FRIENDLY_VERSION "${HIVE_VERSION_MAJOR}.${HIVE_VERSION_MINOR}.${HIVE_VERSION_PATCH}-beta${HIVE_VERSION_BETA}")
-#endif()
 
 ############ Add projects
 

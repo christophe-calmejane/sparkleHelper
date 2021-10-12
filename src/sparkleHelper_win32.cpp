@@ -1,20 +1,25 @@
 /*
-* Copyright (C) 2017-2020, Emilien Vallot, Christophe Calmejane and other contributors
-
-* This file is part of Hive.
-
-* Hive is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Lesser General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-
-* Hive is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Lesser General Public License for more details.
-
-* You should have received a copy of the GNU Lesser General Public License
-* along with Hive.  If not, see <http://www.gnu.org/licenses/>.
+* MIT License
+*
+* Copyright (c) 2020'21 Christophe Calmejane
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
 */
 
 #include "sparkleHelper/sparkleHelper.hpp"
@@ -22,7 +27,28 @@
 #include <winsparkle.h>
 #include <Windows.h>
 
-void Sparkle::init(std::string const& signature) noexcept
+#include <string>
+#include <stdexcept>
+
+inline std::wstring utf8ToWideChar(std::string const& str)
+{
+	auto const sizeHint = str.size(); // WideChar size cannot exceed the number of multi-bytes
+	auto result = std::wstring(static_cast<std::wstring::size_type>(sizeHint), std::wstring::value_type{ 0 }); // Brace-initialization constructor prevents the use of {}
+
+	// Try to convert
+	auto const convertedLength = MultiByteToWideChar(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), static_cast<int>(sizeHint));
+	if (convertedLength == 0)
+	{
+		throw std::invalid_argument("Failed to convert from MultiByte to WideChar");
+	}
+
+	// Adjust size
+	result.resize(convertedLength);
+
+	return result;
+}
+
+void Sparkle::init(std::string const& internalNumber, std::string const& signature) noexcept
 {
 	try
 	{
@@ -30,6 +56,14 @@ void Sparkle::init(std::string const& signature) noexcept
 		win_sparkle_set_langid(::GetThreadUILanguage());
 		// Set our DSA public key
 		win_sparkle_set_dsa_pub_pem(signature.c_str());
+		// Set internal number
+		try
+		{
+			win_sparkle_set_app_build_version(utf8ToWideChar(internalNumber).c_str());
+		}
+		catch (std::invalid_argument const&)
+		{
+		}
 
 		// Set callbacks to handle application shutdown when an update is starting
 		win_sparkle_set_can_shutdown_callback(
@@ -67,6 +101,10 @@ void Sparkle::init(std::string const& signature) noexcept
 				if (sparkle._logHandler)
 				{
 					sparkle._logHandler("Automatic update failed", LogLevel::Warn);
+				}
+				if (sparkle._updateFailedHandler)
+				{
+					sparkle._updateFailedHandler();
 				}
 			});
 
