@@ -20,13 +20,13 @@ getSignatureHash()
 
 	elif isMac;
 	then
-		local signUpdateFile="3rdparty/sparkle/sign_update"
+		local signUpdateFile="${selfFolderPath}../3rdparty/sparkle/sign_update"
 		if [ ! -f "$signUpdateFile" ];
 		then
-			echo "ERROR: $signUpdateFile not found"
+			echo "ERROR: $signUpdateFile not found, did you run setup_fresh_env.sh?"
 			exit 1
 		fi
-		result=$(3rdparty/sparkle/sign_update "$filePath" | cut -d '"' -f 2)
+		result=$(${signUpdateFile} "$filePath" | cut -d '"' -f 2)
 
 	else
 		echo "getSignatureHash: TODO"
@@ -38,14 +38,15 @@ getSignatureHash()
 generateAppcast()
 {
 	local installerPath="$1"
-	local installerVersion="$2"
-	local dsaPrivKeyPath="$3"
-	local changelogURL="$4"
-	local installerURL="$5"
-	local installerArgs="$6"
+	local marketingVersion="$2"
+	local buildNumber="$3"
+	local dsaPrivKeyPath="$4"
+	local changelogURL="$5"
+	local installerURL="$6"
+	local installerArgs="$7"
 
 	local installerName="${installerPath##*/}"
-	local appcastFile="appcastItem-${installerVersion}.xml"
+	local appcastFile="appcastItem-${marketingVersion}.xml"
 
 	local fileSize
 	getFileSize "$installerPath" fileSize
@@ -61,7 +62,7 @@ generateAppcast()
 
 	# Common Appcast Item header
 	echo "		<item>" > "$appcastFile"
-	echo "			<title>Version $installerVersion</title>" >> "$appcastFile"
+	echo "			<title>Version $marketingVersion</title>" >> "$appcastFile"
 	echo "			<sparkle:releaseNotesLink>" >> "$appcastFile"
 	echo "				${changelogURL}" >> "$appcastFile"
 	echo "			</sparkle:releaseNotesLink>" >> "$appcastFile"
@@ -86,7 +87,8 @@ generateAppcast()
 	fi
 
 	# Common Appcast Item footer
-	echo "				sparkle:version=\"${installerVersion}\"" >> "$appcastFile"
+	echo "				sparkle:shortVersionString=\"${marketingVersion}\"" >> "$appcastFile"
+	echo "				sparkle:version=\"${buildNumber}\"" >> "$appcastFile"
 	echo "				length=\"${fileSize}\"" >> "$appcastFile"
 	echo "				type=\"application/octet-stream\"" >> "$appcastFile"
 	echo "			/>" >> "$appcastFile"
@@ -98,10 +100,10 @@ generateAppcast()
 
 printHelp()
 {
-	echo "Usage: generate_appcast.sh <Installer Path> <Installer Version> <DSA Private Key Path> <ChangeLog URL> <Installer URL> <Installer Arguments>"
+	echo "Usage: generate_appcast.sh <Installer Path> <Installer Marketing Version> <Build Number> <DSA Private Key Path> <ChangeLog URL> <Installer URL> <Windows Installer Arguments>"
 }
 
-if [ $# -ne 6 ]; then
+if [ $# -ne 7 ]; then
 	echo "ERROR: Missing parameters"
 	printHelp
 	exit 1
@@ -113,6 +115,6 @@ if [ ! -f "$1" ]; then
 	exit 1
 fi
 
-generateAppcast "$1" "$2" "$3" "$4" "$5" "$6"
+generateAppcast "$1" "$2" "$3" "$4" "$5" "$6" "$7"
 
 exit 0
