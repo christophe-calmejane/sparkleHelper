@@ -129,7 +129,7 @@ void Sparkle::init(std::string const& /*internalNumber*/, std::string const& sig
 {
 	auto* const updater = [SUUpdater sharedUpdater];
 
-	updater.delegate = [SparkleDelegate getInstance];
+	updater.delegate = static_cast<id<SUUpdaterDelegate>>([SparkleDelegate getInstance]);
 
 	// Get current Check For Updates value
 	_checkForUpdates = updater.automaticallyChecksForUpdates;
