@@ -20,14 +20,23 @@ if(NOT DEFINED Sparkle::lib)
 		add_library(Sparkle::lib ALIAS winsparkle)
 
 	elseif(APPLE)
+		# Disabling our Hack that sets a source file property and declare INTERFACE_SOURCES as it's not working if the source property scope is not the same than the final app bundle
+		# Until https://gitlab.kitware.com/cmake/cmake/-/issues/22760 is resolved at least
+		# So for the time being, this file defines a macro (that will have to be removed when the above ticket is resolved) the final app bundle will have to call before linking with SparkleHelper
+		# Unfortunately only Xcode generator does correctly copy the full framework so we have to disable other generators for now (until the above ticket is resolved)
+		if(NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
+			message(FATAL_ERROR "Currently only Xcode generator is supported when using Sparkle (see comments here)")
+		endif()
 		set(SPARKLE_BASE_DIR "${SPARKLEHELPER_ROOT_DIR}/3rdparty/sparkle")
-		set_source_files_properties(${SPARKLE_BASE_DIR}/Sparkle.framework PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks) # MACOSX_PACKAGE_LOCATION = Place a 'source file' (here it is Sparkle.framework) into the app bundle
+		set(SPARKLE_FRAMEWORK_PATH "${SPARKLE_BASE_DIR}/Sparkle.framework")
+		set_property(GLOBAL PROPERTY FIXUP_SPARKLE_PATH "${SPARKLE_FRAMEWORK_PATH}")
+		# set_source_files_properties("${SPARKLE_FRAMEWORK_PATH}" PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks) # MACOSX_PACKAGE_LOCATION = Place a 'source file' (here it is Sparkle.framework) into the app bundle
 
 		add_library(sparkle INTERFACE IMPORTED GLOBAL)
 
 		set_target_properties(sparkle PROPERTIES
-			INTERFACE_SOURCES "${SPARKLE_BASE_DIR}/Sparkle.framework" # So that our framework is considered a source file, and copied to the app bundle through MACOSX_PACKAGE_LOCATION
-			INTERFACE_LINK_LIBRARIES "${SPARKLE_BASE_DIR}/Sparkle.framework" # So the framework is linked to the target, as well as adding include search path (automatically done by cmake when detecting a framework)
+			INTERFACE_SOURCES "${SPARKLE_FRAMEWORK_PATH}" # So that our framework is considered a source file, and copied to the app bundle through MACOSX_PACKAGE_LOCATION
+			INTERFACE_LINK_LIBRARIES "${SPARKLE_FRAMEWORK_PATH}" # So the framework is linked to the target, as well as adding include search path (automatically done by cmake when detecting a framework)
 		)
 
 		add_library(Sparkle::lib ALIAS sparkle)
@@ -38,3 +47,10 @@ if(NOT DEFINED Sparkle::lib)
 
 	endif()
 endif()
+
+macro(fixup_sparkleHelper_dependencies)
+	if(APPLE)
+		get_property(fixupPath GLOBAL PROPERTY FIXUP_SPARKLE_PATH)
+		set_source_files_properties(${fixupPath} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
+	endif()
+endmacro()
