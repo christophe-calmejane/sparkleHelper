@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Optional parameters:
+#  $1: Signing identity to sign Sparkle Framework
 
 # Get absolute folder for this script
 selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absolute path
@@ -8,6 +10,8 @@ selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absol
 
 setupEnv()
 {
+	local signingIdentity="$1"
+
 	echo -n "Fetching submodules... "
 	local log=$(git submodule update --init --recursive 2>&1)
 	if [ $? -ne 0 ];
@@ -138,14 +142,28 @@ setupEnv()
 				rm -f "$spkloutputFile"
 				rm -rf "$spklOutputFolder"
 				echo "done"
-				echo "You need to manually codesign Sparkle Autoupdate bundle:"
-				echo "  codesign -s YourCodeSigningIdentityOrDash --timestamp --deep --strict --force --options=runtime ${baseSparkleFolder}/Sparkle.framework/Resources/Autoupdate.app"
+				if [ ! -z "$signingIdentity" ];
+				then
+					echo -n "Codesigning Sparkle Framework... "
+					local log=$(codesign -s "$signingIdentity" --timestamp --deep --strict --force --options=runtime "${baseSparkleFolder}/Sparkle.framework/Resources/Autoupdate.app" 2>&1)
+					if [ $? -ne 0 ];
+					then
+						echo "failed!"
+						echo ""
+						echo "Error log:"
+						echo $log
+						exit 1
+					fi
+				else
+					echo "You need to manually codesign Sparkle Autoupdate bundle:"
+					echo "  codesign -s YourCodeSigningIdentityOrDash --timestamp --deep --strict --force --options=runtime ${baseSparkleFolder}/Sparkle.framework/Resources/Autoupdate.app"
+				fi
 			fi
 		fi
 
 	fi
 }
 
-setupEnv
+setupEnv "$1"
 
 exit 0
