@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # Get absolute folder for this script
-selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absolute path
+sh_gdk_selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absolute path
 
 # Include util functions
-. "${selfFolderPath}bashUtils/utils.sh"
+. "${sh_gdk_selfFolderPath}bashUtils/utils.sh"
 
 generateKeys()
 {
@@ -42,7 +42,7 @@ generateKeys()
 		then
 			echo "already found in resources, not generating new ones"
 		else
-			local generateKeys="${selfFolderPath}../3rdparty/sparkle/generate_keys"
+			local generateKeys="${sh_gdk_selfFolderPath}../3rdparty/sparkle/generate_keys"
 			if [ ! -f "$generateKeys" ];
 			then
 				echo "failed, $generateKeys not found"

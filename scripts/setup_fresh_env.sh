@@ -3,10 +3,10 @@
 #  $1: Signing identity to sign Sparkle Framework
 
 # Get absolute folder for this script
-selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absolute path
+sh_sfe_selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absolute path
 
 # Include util functions
-. "${selfFolderPath}bashUtils/utils.sh"
+. "${sh_sfe_selfFolderPath}bashUtils/utils.sh"
 
 setupEnv()
 {
@@ -27,7 +27,7 @@ setupEnv()
 	getOS osName
 	if [[ $osName == "win" ]];
 	then
-		local baseSparkleFolder="${selfFolderPath}../3rdparty/winsparkle"
+		local baseSparkleFolder="${sh_sfe_selfFolderPath}../3rdparty/winsparkle"
 		if [[ ! -d "${baseSparkleFolder}/bin" || ! -d "${baseSparkleFolder}/include" || ! -d "${baseSparkleFolder}/lib" ]];
 		then
 			echo -n "Downloading WinSparkle... "
@@ -92,7 +92,7 @@ setupEnv()
 	elif [[ $osName == "mac" ]];
 	then
 		echo -n "Downloading Sparkle... "
-		local baseSparkleFolder="${selfFolderPath}../3rdparty/sparkle"
+		local baseSparkleFolder="${sh_sfe_selfFolderPath}../3rdparty/sparkle"
 		local result
 		result=$(which wget 2>&1)
 		if [ $? -ne 0 ];

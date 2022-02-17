@@ -2,10 +2,10 @@
 # Useful script to generate appcast files
 
 # Get absolute folder for this script
-selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absolute path
+sh_ga_selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the absolute path
 
 # Include util functions
-. "${selfFolderPath}bashUtils/utils.sh"
+. "${sh_ga_selfFolderPath}bashUtils/utils.sh"
 
 getSignatureHash()
 {
@@ -20,7 +20,7 @@ getSignatureHash()
 
 	elif isMac;
 	then
-		local signUpdateFile="${selfFolderPath}../3rdparty/sparkle/sign_update"
+		local signUpdateFile="${sh_ga_selfFolderPath}../3rdparty/sparkle/sign_update"
 		if [ ! -f "$signUpdateFile" ];
 		then
 			echo "ERROR: $signUpdateFile not found, did you run setup_fresh_env.sh?"
