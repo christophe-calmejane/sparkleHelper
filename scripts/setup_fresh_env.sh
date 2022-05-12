@@ -99,10 +99,10 @@ setupEnv()
 		then
 			echo "failed, wget not found (see ${baseSparkleFolder}/README.me for manually installation instructions)"
 		else
-			local spkloutputFile="_Sparkle.tar.bz2"
+			local spkloutputFile="_Sparkle.tar.xz"
 			rm -f "$spkloutputFile"
-			local spklVersion="1.22.0"
-			local log=$("$result" https://github.com/sparkle-project/Sparkle/releases/download/${spklVersion}/Sparkle-${spklVersion}.tar.bz2 -O "$spkloutputFile" 2>&1)
+			local spklVersion="1.27.1"
+			local log=$("$result" https://github.com/sparkle-project/Sparkle/releases/download/${spklVersion}/Sparkle-${spklVersion}.tar.xz -O "$spkloutputFile" 2>&1)
 			if [ $? -ne 0 ];
 			then
 				echo "failed!"
@@ -124,7 +124,7 @@ setupEnv()
 				local spklOutputFolder="_Sparkle"
 				rm -rf "$spklOutputFolder"
 				mkdir -p "$spklOutputFolder"
-				local log=$("$result" xvjf "$spkloutputFile" --directory "$spklOutputFolder" 2>&1)
+				local log=$("$result" xvJf "$spkloutputFile" --directory "$spklOutputFolder" 2>&1)
 				if [ $? -ne 0 ];
 				then
 					echo "failed!"
