@@ -29,13 +29,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Default Component
-set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "sparkleHelper")
+if(NOT CMAKE_INSTALL_DEFAULT_COMPONENT_NAME)
+	set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "sparkleHelper")
+endif()
 
 # Set minimum OSX version
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE INTERNAL "Force the target to be at least a Mac OS X 10.9" FORCE)
-
-# Enable cmake folders
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+	set(CMAKE_OSX_DEPLOYMENT_TARGET 10.9 CACHE INTERNAL "Force the target to be at least a Mac OS X 10.9" FORCE)
+endif()
 
 # Configure installation path: we override the default installation path.
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
