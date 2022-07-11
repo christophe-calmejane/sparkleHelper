@@ -50,14 +50,15 @@ generateKeys()
 				echo -n "Keychain access might be requested, accept it... "
 				"$generateKeys" &> /dev/null
 				# Run it a second time as only the second successfull run will print the public key
-				local generateKeysResult="$("$generateKeys")"
-				if [ `echo "$generateKeysResult" | wc -l` -ne 6 ];
+				local generateKeysResult="$("$generateKeys" -p)"
+				if [ $? -ne 0 ];
 				then
 					echo "failed, unexpected result from $generateKeys command, have you accepted keychain access?"
 					exit 1
 				fi
-				local ed25519PubKey="$(echo "$generateKeysResult" | head -n 6 | tail -n 1)"
-				echo "$ed25519PubKey" > "$dsa_pub_key"
+				# local ed25519PubKey="$(echo "$generateKeysResult" | head -n 6 | tail -n 1)"
+				# echo "$ed25519PubKey" > "$dsa_pub_key"
+				echo "$generateKeysResult" > "$dsa_pub_key"
 				echo "done"
 			fi
 		fi
