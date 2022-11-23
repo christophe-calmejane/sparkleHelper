@@ -23,10 +23,7 @@ if(NOT DEFINED Sparkle::lib)
 		# Disabling our Hack that sets a source file property and declare INTERFACE_SOURCES as it's not working if the source property scope is not the same than the final app bundle
 		# Until https://gitlab.kitware.com/cmake/cmake/-/issues/22760 is resolved at least
 		# So for the time being, this file defines a macro (that will have to be removed when the above ticket is resolved) the final app bundle will have to call before linking with SparkleHelper
-		# Unfortunately only Xcode generator does correctly copy the full framework so we have to disable other generators for now (until the above ticket is resolved)
-		if(NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
-			message(FATAL_ERROR "Currently only Xcode generator is supported when using Sparkle (see comments here)")
-		endif()
+		# Unfortunately only Xcode generator does correctly copy the full framework so we have to provide another fixup method (until the above ticket is resolved)
 		set(SPARKLE_BASE_DIR "${SPARKLEHELPER_ROOT_DIR}/3rdparty/sparkle")
 		set(SPARKLE_FRAMEWORK_PATH "${SPARKLE_BASE_DIR}/Sparkle.framework")
 		set_property(GLOBAL PROPERTY FIXUP_SPARKLE_PATH "${SPARKLE_FRAMEWORK_PATH}")
@@ -49,8 +46,29 @@ if(NOT DEFINED Sparkle::lib)
 endif()
 
 macro(fixup_sparkleHelper_dependencies)
-	if(APPLE)
+	if("${CMAKE_GENERATOR}" STREQUAL "Xcode")
 		get_property(fixupPath GLOBAL PROPERTY FIXUP_SPARKLE_PATH)
 		set_source_files_properties(${fixupPath} PROPERTIES MACOSX_PACKAGE_LOCATION Frameworks)
 	endif()
 endmacro()
+
+function(fixup_sparkleHelper_resources TARGET_NAME)
+	# https://gitlab.kitware.com/cmake/cmake/-/issues/16886
+	if(APPLE AND NOT "${CMAKE_GENERATOR}" STREQUAL "Xcode")
+		get_target_property(targetType ${TARGET_NAME} TYPE)
+		if(${targetType} STREQUAL "EXECUTABLE")
+			get_target_property(isBundle ${TARGET_NAME} MACOSX_BUNDLE)
+			if(${isBundle})
+				get_property(fixupPath GLOBAL PROPERTY FIXUP_SPARKLE_PATH)
+				add_custom_command(
+					TARGET ${TARGET_NAME}
+					POST_BUILD
+					COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_CONTENT_DIR:${TARGET_NAME}>/Frameworks"
+					COMMAND cp -a "${fixupPath}" "$<TARGET_BUNDLE_CONTENT_DIR:${TARGET_NAME}>/Frameworks/" # Cannot use cmake copy_directory as it doesn't preserve symlinks: https://gitlab.kitware.com/cmake/cmake/-/issues/14609
+					COMMENT "Fixup Sparkle resources for ${TARGET_NAME}"
+					VERBATIM
+				)
+			endif()
+		endif()
+	endif()
+endfunction()
