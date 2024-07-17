@@ -1,7 +1,7 @@
 <?php
 /*
 	Markdown to HTML ChangeLog converter
-	(c) 2020'21 - Christophe Calmejane
+	(c) 2020'24 - Christophe Calmejane
 
 	Using Parsedown library (http://parsedown.org)
 */
@@ -53,6 +53,12 @@ if(isset($_GET["lastKnownVersion"]))
 	$lastKnownVersion = $_GET["lastKnownVersion"];
 }
 
-echo getChangelog('CHANGELOG.md', $version, $lastKnownVersion)
+$fileURL = "CHANGELOG.md";
+if(isset($_GET["fileURL"]))
+{
+	$fileURL = $_GET["fileURL"];
+}
+
+echo getChangelog($fileURL, $version, $lastKnownVersion)
 
 ?>
