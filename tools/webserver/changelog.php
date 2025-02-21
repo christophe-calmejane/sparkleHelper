@@ -1,7 +1,7 @@
 <?php
 /*
 	Markdown to HTML ChangeLog converter
-	(c) 2020'24 - Christophe Calmejane
+	(C) 2020-2025 - Christophe Calmejane
 
 	Using Parsedown library (http://parsedown.org)
 */

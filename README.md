@@ -1,6 +1,6 @@
 # SparkleHelper
 
-Copyright (C) 2020-2022, Christophe Calmejane
+Copyright (C) 2020-2025, Christophe Calmejane
 
 ## What is SparkleHelper
 
