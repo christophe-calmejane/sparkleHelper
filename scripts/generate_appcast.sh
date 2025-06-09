@@ -46,7 +46,23 @@ generateAppcast()
 	local installerArgs="$7"
 
 	local installerName="${installerPath##*/}"
+	local installerExtension="${installerPath##*.}"
 	local appcastFile="appcastItem-${marketingVersion}.xml"
+
+	# For the time being, error if we are requested to generate an appcast for a DMG (Sparkle V1 only update the .app so if we have other files in the DMG, it will not work)
+	if [[ "${installerExtension}" == "dmg" ]]; then
+		echo "ERROR: Sparkle V1 only supports .app updates, so you should not use it with a DMG installer."
+		echo "       If you want to use Sparkle, please use installer instead."
+		exit 1
+		# If we want a more flexible solution, we could check if the DMG only contains a single .app file and allow it
+	fi
+	# For the time being, error if we are requested to generate an appcast for a ZIP (Sparkle V1 only update the .app/.exe so if we have other files in the ZIP, it will not work)
+	if [[ "${installerExtension}" == "zip" ]]; then
+		echo "ERROR: Sparkle V1 only supports .app/.exe updates, so you should not use it with a ZIP installer."
+		echo "       If you want to use Sparkle, please use installer instead."
+		exit 1
+		# If we want a more flexible solution, we could check if the ZIP only contains a single .app file and allow it
+	fi
 
 	local fileSize
 	getFileSize "$installerPath" fileSize
