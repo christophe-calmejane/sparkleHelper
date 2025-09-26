@@ -47,7 +47,16 @@ generateAppcast()
 
 	local installerName="${installerPath##*/}"
 	local installerExtension="${installerPath##*.}"
-	local appcastFile="appcastItem-${marketingVersion}.xml"
+
+	if isWindows;
+	then
+		local appcastFile="appcastItem-win-${marketingVersion}.xml"
+	elif isMac;
+	then
+		local appcastFile="appcastItem-mac-${marketingVersion}.xml"
+	else
+		local appcastFile="appcastItem-${marketingVersion}.xml"
+	fi
 
 	# For the time being, error if we are requested to generate an appcast for a DMG (Sparkle V1 only update the .app so if we have other files in the DMG, it will not work)
 	if [[ "${installerExtension}" == "dmg" ]]; then
