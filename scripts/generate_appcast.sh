@@ -7,16 +7,55 @@ sh_ga_selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get the
 # Include util functions
 . "${sh_ga_selfFolderPath}bashUtils/utils.sh"
 
+# Include openssl functions
+. "${sh_ga_selfFolderPath}openssl_utils.sh"
+
 getSignatureHash()
 {
 	local filePath="$1"
 	local privKey="$2"
 	local _retval="$3"
+	local _retvalAttribute="$4"
 	local result=""
+	local attribute="sparkle:edSignature"
 
 	if isWindows;
 	then
-		result=$(openssl dgst -sha1 -binary < "$filePath" | openssl dgst -sha1 -sign "$privKey" | openssl enc -base64)
+		if [ ! -f "$privKey" ];
+		then
+			echo "ERROR: Private key not found: $privKey"
+			exit 1
+		fi
+		local privKeyType
+		getPrivateKeyType "$privKey" privKeyType
+		# Check openssl supports EdDSA (unless signing with a legacy DSA key), also detects an openssl too old to read an EdDSA key
+		if [[ $privKeyType != "dsa" ]];
+		then
+			local errorMessage
+			errorMessage="$(checkOpenSSLEdDSASupport)"
+			if [ $? -ne 0 ];
+			then
+				echo "ERROR: $errorMessage"
+				exit 1
+			fi
+		fi
+
+		if [[ $privKeyType == "eddsa" ]];
+		then
+			getEdDSASignature "$filePath" "$privKey" result
+
+		elif [[ $privKeyType == "dsa" ]];
+		then
+			echo "WARNING: Signing with a legacy DSA key, which is deprecated by WinSparkle. Consider migrating to EdDSA (see generate_dsa_keys.sh)."
+			attribute="sparkle:dsaSignature"
+			local opensslPrivKey
+			getOpenSSLPath "$privKey" opensslPrivKey
+			result=$(openssl dgst -sha1 -binary < "$filePath" | openssl dgst -sha1 -sign "$opensslPrivKey" | openssl enc -base64 -A)
+
+		else
+			echo "ERROR: Unsupported private key (EdDSA or legacy DSA PEM key expected): $privKey"
+			exit 1
+		fi
 
 	elif isMac;
 	then
@@ -33,6 +72,7 @@ getSignatureHash()
 	fi
 
 	eval $_retval="'${result}'"
+	eval $_retvalAttribute="'${attribute}'"
 }
 
 generateAppcast()
@@ -40,7 +80,7 @@ generateAppcast()
 	local installerPath="$1"
 	local marketingVersion="$2"
 	local buildNumber="$3"
-	local dsaPrivKeyPath="$4"
+	local privKeyPath="$4"
 	local changelogURL="$5"
 	local installerURL="$6"
 	local installerArgs="$7"
@@ -77,7 +117,8 @@ generateAppcast()
 	getFileSize "$installerPath" fileSize
 
 	local fileSignature
-	getSignatureHash "$installerPath" "$dsaPrivKeyPath" fileSignature
+	local fileSignatureAttribute
+	getSignatureHash "$installerPath" "$privKeyPath" fileSignature fileSignatureAttribute
 
 	if [ "x$fileSignature" == "x" ];
 	then
@@ -97,13 +138,13 @@ generateAppcast()
 	# OS-dependant Item values
 	if isWindows;
 	then
-		echo "				sparkle:dsaSignature=\"${fileSignature}\"" >> "$appcastFile"
+		echo "				${fileSignatureAttribute}=\"${fileSignature}\"" >> "$appcastFile"
 		echo "				sparkle:installerArguments=\"${installerArgs}\"" >> "$appcastFile"
 		echo "				sparkle:os=\"windows\"" >> "$appcastFile"
 
 	elif isMac;
 	then
-		echo "				sparkle:edSignature=\"${fileSignature}\"" >> "$appcastFile"
+		echo "				${fileSignatureAttribute}=\"${fileSignature}\"" >> "$appcastFile"
 		echo "				sparkle:os=\"macos\"" >> "$appcastFile"
 
 	else
@@ -125,7 +166,8 @@ generateAppcast()
 
 printHelp()
 {
-	echo "Usage: generate_appcast.sh <Installer Path> <Installer Marketing Version> <Build Number> <DSA Private Key Path> <ChangeLog URL> <Installer URL> <Windows Installer Arguments>"
+	echo "Usage: generate_appcast.sh <Installer Path> <Installer Marketing Version> <Build Number> <Private Key Path> <ChangeLog URL> <Installer URL> <Windows Installer Arguments>"
+	echo "Note: <Private Key Path> is only used on Windows (EdDSA or legacy DSA PEM key), macOS uses the key stored in the Keychain"
 }
 
 if [ $# -ne 7 ]; then

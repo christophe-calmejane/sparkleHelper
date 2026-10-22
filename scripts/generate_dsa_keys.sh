@@ -6,37 +6,70 @@ sh_gdk_selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get th
 # Include util functions
 . "${sh_gdk_selfFolderPath}bashUtils/utils.sh"
 
+# Include openssl functions
+. "${sh_gdk_selfFolderPath}openssl_utils.sh"
+
+# Note: For backward compatibility, files are still named dsa_pub.pem and dsa_priv.pem, although they now contain EdDSA (ed25519) keys
 generateKeys()
 {
 	getOS osName
 	if [[ $osName == "win" ]];
 	then
-		echo -n "Generating DSA keys... "
-		local dsa_params="${outputFolder}/dsa_param.pem"
+		echo -n "Generating EdDSA keys... "
 		local dsa_pub_key="${outputFolder}/dsa_pub.pem"
 		local dsa_priv_key="${outputFolder}/dsa_priv.pem"
 		if [ -f "$dsa_pub_key" ];
 		then
 			echo "already found in resources, not generating new ones"
+			if grep -q "BEGIN PUBLIC KEY" "$dsa_pub_key";
+			then
+				echo "WARNING: Found a legacy DSA key, which is deprecated by WinSparkle. Remove both $dsa_pub_key and $dsa_priv_key files to generate EdDSA keys."
+				echo "         Changing the key is a breaking change: already deployed versions will not accept updates signed with the new key (use a new appcast)."
+			fi
 		else
-			result=$(which openssl 2>&1)
+			local errorMessage
+			errorMessage="$(checkOpenSSLEdDSASupport)"
 			if [ $? -ne 0 ];
 			then
-				echo "failed, openssl not found"
-			else
-				openssl dsaparam 1024 < /dev/random > "$dsa_params" 2>&1
-				openssl gendsa -out "$dsa_priv_key" "$dsa_params" 2>&1
-				openssl dsa -in "$dsa_priv_key" -pubout -out "$dsa_pub_key" 2>&1
-				chmod 600 "$dsa_priv_key" 2>&1
-				chmod 644 "$dsa_pub_key" 2>&1
-				rm -f "$dsa_params" 2>&1
-				echo "done"
+				echo "failed, $errorMessage"
+				exit 1
 			fi
+			# Never overwrite an existing private key
+			if [ -f "$dsa_priv_key" ];
+			then
+				local privKeyType
+				getPrivateKeyType "$dsa_priv_key" privKeyType
+				if [[ $privKeyType != "eddsa" ]];
+				then
+					echo "failed, $dsa_priv_key already exists but is not an EdDSA private key (remove it to generate new keys)"
+					exit 1
+				fi
+				echo -n "using existing private key... "
+			else
+				openssl genpkey -algorithm ed25519 > "$dsa_priv_key"
+				if [ $? -ne 0 ];
+				then
+					echo "failed to generate private key"
+					rm -f "$dsa_priv_key"
+					exit 1
+				fi
+				chmod 600 "$dsa_priv_key" 2>&1
+			fi
+			local eddsaPubKey
+			getEdDSAPublicKey "$dsa_priv_key" eddsaPubKey
+			if [ -z "$eddsaPubKey" ];
+			then
+				echo "failed to extract public key"
+				exit 1
+			fi
+			echo "$eddsaPubKey" > "$dsa_pub_key"
+			chmod 644 "$dsa_pub_key" 2>&1
+			echo "done"
 		fi
 
 	elif [[ $osName == "mac" ]];
 	then
-		echo -n "Generating DSA keys... "
+		echo -n "Generating EdDSA keys... "
 		local dsa_pub_key="${outputFolder}/dsa_pub.pem"
 		if [ -f "$dsa_pub_key" ];
 		then
@@ -74,6 +107,7 @@ generateKeys()
 printHelp()
 {
 	echo "Usage: generate_dsa_keys.sh <Output Folder>"
+	echo "Generates EdDSA (ed25519) keys in <Output Folder>/dsa_pub.pem (and <Output Folder>/dsa_priv.pem on Windows, macOS stores it in the Keychain)"
 }
 
 if [ $# -ne 1 ]; then

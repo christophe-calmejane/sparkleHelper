@@ -8,6 +8,52 @@ sh_sfe_selfFolderPath="`cd "${BASH_SOURCE[0]%/*}"; pwd -P`/" # Command to get th
 # Include util functions
 . "${sh_sfe_selfFolderPath}bashUtils/utils.sh"
 
+# Downloads a file using either wget or curl
+# downloadFile <URL> <Output File> <Return Variable for the error log>
+downloadFile()
+{
+	local url="$1"
+	local outputFile="$2"
+	local _retval="$3"
+	local result=""
+	local returnCode=0
+
+	if [ ! -z "$(getCommandPath wget)" ];
+	then
+		result=$(wget "$url" -O "$outputFile" 2>&1)
+		returnCode=$?
+	elif [ ! -z "$(getCommandPath curl)" ];
+	then
+		result=$(curl -fsSL "$url" -o "$outputFile" 2>&1)
+		returnCode=$?
+	else
+		result="neither wget nor curl found"
+		returnCode=1
+	fi
+
+	eval $_retval="'${result//\'/}'"
+	return $returnCode
+}
+
+# Gets the version of WinSparkle installed in the specified folder (empty if not installed)
+# getInstalledWinSparkleVersion <WinSparkle Folder> <Return Variable>
+getInstalledWinSparkleVersion()
+{
+	local versionFile="$1/include/winsparkle-version.h"
+	local _retval="$2"
+	local result=""
+
+	if [ -f "$versionFile" ];
+	then
+		local major="$(grep -E "#define WIN_SPARKLE_VERSION_MAJOR" "$versionFile" | awk '{print $3}')"
+		local minor="$(grep -E "#define WIN_SPARKLE_VERSION_MINOR" "$versionFile" | awk '{print $3}')"
+		local micro="$(grep -E "#define WIN_SPARKLE_VERSION_MICRO" "$versionFile" | awk '{print $3}')"
+		result="${major}.${minor}.${micro}"
+	fi
+
+	eval $_retval="'${result}'"
+}
+
 setupEnv()
 {
 	local signingIdentity="$1"
@@ -28,36 +74,39 @@ setupEnv()
 	if [[ $osName == "win" ]];
 	then
 		local baseSparkleFolder="${sh_sfe_selfFolderPath}../3rdparty/winsparkle"
+		local spklVersion="0.9.4"
+		local installedSpklVersion
+		getInstalledWinSparkleVersion "${baseSparkleFolder}" installedSpklVersion
+		if [[ ! -z "$installedSpklVersion" && "$installedSpklVersion" != "$spklVersion" ]];
+		then
+			echo "Removing WinSparkle ${installedSpklVersion} (version ${spklVersion} required)"
+			rm -rf "${baseSparkleFolder}/bin" "${baseSparkleFolder}/include" "${baseSparkleFolder}/lib"
+		fi
 		if [[ ! -d "${baseSparkleFolder}/bin" || ! -d "${baseSparkleFolder}/include" || ! -d "${baseSparkleFolder}/lib" ]];
 		then
 			echo -n "Downloading WinSparkle... "
-			local result
-			result=$(which wget 2>&1)
+			local wspkloutputFile="_WinSparkle.zip"
+			rm -f "$wspkloutputFile"
+			local spklZipName="WinSparkle-${spklVersion}"
+			local log
+			downloadFile "https://github.com/vslavik/winsparkle/releases/download/v${spklVersion}/${spklZipName}.zip" "$wspkloutputFile" log
 			if [ $? -ne 0 ];
 			then
-				echo "failed, wget not found (see ${baseSparkleFolder}/README.me for manually installation instructions)"
-			else
-				local wspkloutputFile="_WinSparkle.zip"
+				echo "failed! (see ${baseSparkleFolder}/README.md for manual installation instructions)"
+				echo ""
+				echo "Error log:"
+				echo $log
 				rm -f "$wspkloutputFile"
-				local spklVersion="0.6.0"
-				local spklZipName="WinSparkle-${spklVersion}"
-				local log=$("$result" https://github.com/vslavik/winsparkle/releases/download/v${spklVersion}/${spklZipName}.zip -O "$wspkloutputFile" 2>&1)
-				if [ $? -ne 0 ];
-				then
-					echo "failed!"
-					echo ""
-					echo "Error log:"
-					echo $log
-					rm -f "$wspkloutputFile"
-					exit 1
-				fi
+				exit 1
+			else
 				echo "done"
 
 				echo -n "Installing WinSparkle... "
+				local result
 				result=$(which unzip 2>&1)
 				if [ $? -ne 0 ];
 				then
-					echo "failed, unzip not found (see ${baseSparkleFolder}/README.me for manually installation instructions)"
+					echo "failed, unzip not found (see ${baseSparkleFolder}/README.md for manual installation instructions)"
 					rm -f "$wspkloutputFile"
 				else
 					local wspklOutputFolder="_WinSparkle"
@@ -75,13 +124,17 @@ setupEnv()
 					fi
 					mkdir -p "${baseSparkleFolder}/bin/x86"
 					mkdir -p "${baseSparkleFolder}/bin/x64"
+					mkdir -p "${baseSparkleFolder}/bin/arm64"
 					mkdir -p "${baseSparkleFolder}/lib/x86"
 					mkdir -p "${baseSparkleFolder}/lib/x64"
+					mkdir -p "${baseSparkleFolder}/lib/arm64"
 					mv "${wspklOutputFolder}/${spklZipName}/include" "${baseSparkleFolder}/"
-					mv "${wspklOutputFolder}/${spklZipName}/Release/WinSparkle.dll" "${baseSparkleFolder}/bin/x86"
-					mv "${wspklOutputFolder}/${spklZipName}/Release/WinSparkle.lib" "${baseSparkleFolder}/lib/x86"
+					mv "${wspklOutputFolder}/${spklZipName}/Win32/Release/WinSparkle.dll" "${baseSparkleFolder}/bin/x86"
+					mv "${wspklOutputFolder}/${spklZipName}/Win32/Release/WinSparkle.lib" "${baseSparkleFolder}/lib/x86"
 					mv "${wspklOutputFolder}/${spklZipName}/x64/Release/WinSparkle.dll" "${baseSparkleFolder}/bin/x64"
 					mv "${wspklOutputFolder}/${spklZipName}/x64/Release/WinSparkle.lib" "${baseSparkleFolder}/lib/x64"
+					mv "${wspklOutputFolder}/${spklZipName}/ARM64/Release/WinSparkle.dll" "${baseSparkleFolder}/bin/arm64"
+					mv "${wspklOutputFolder}/${spklZipName}/ARM64/Release/WinSparkle.lib" "${baseSparkleFolder}/lib/arm64"
 					rm -f "$wspkloutputFile"
 					rm -rf "$wspklOutputFolder"
 					echo "done"

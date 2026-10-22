@@ -1,15 +1,19 @@
 # WinSparkle manual setup (if not using setup_fresh_env.sh script)
-- Grab [WinSparkle Version 0.6.0](https://github.com/vslavik/winsparkle/releases/download/v0.6.0/WinSparkle-0.6.0.zip) or search it from [WinSparkle's official GitHub project page](https://github.com/vslavik/winsparkle/releases) if the link is broken
+- Grab [WinSparkle Version 0.9.4](https://github.com/vslavik/winsparkle/releases/download/v0.9.4/WinSparkle-0.9.4.zip) or search it from [WinSparkle's official GitHub project page](https://github.com/vslavik/winsparkle/releases) if the link is broken
 - Unzip the file
 - Create the following folders in this current directory:
   - bin/x86
   - bin/x64
+  - bin/arm64
   - include
   - lib/x86
   - lib/x64
+  - lib/arm64
 - Copy files from the unzipped archive to the newly created folders:
-  - WinSparkle.dll (32 bits) -> bin/x86
-  - WinSparkle.dll (64 bits) -> bin/x64
-  - winsparkle.h and winsparkle-version.h -> include
-  - WinSparkle.lib (32 bits) -> lib/x86
-  - WinSparkle.lib (64 bits) -> lib/x64
+  - Win32/Release/WinSparkle.dll -> bin/x86
+  - x64/Release/WinSparkle.dll -> bin/x64
+  - ARM64/Release/WinSparkle.dll -> bin/arm64
+  - include/winsparkle.h and include/winsparkle-version.h -> include
+  - Win32/Release/WinSparkle.lib -> lib/x86
+  - x64/Release/WinSparkle.lib -> lib/x64
+  - ARM64/Release/WinSparkle.lib -> lib/arm64

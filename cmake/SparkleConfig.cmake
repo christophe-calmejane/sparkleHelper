@@ -5,8 +5,14 @@ if(NOT DEFINED Sparkle::lib)
 		set(SPARKLE_BASE_DIR "${SPARKLEHELPER_ROOT_DIR}/3rdparty/winsparkle")
 
 		set(IMPORT_ARCH "x86")
-		if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		if(CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "ARM64")
+			set(IMPORT_ARCH "arm64")
+		elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
 			set(IMPORT_ARCH "x64")
+		endif()
+
+		if(NOT EXISTS "${SPARKLE_BASE_DIR}/lib/${IMPORT_ARCH}/WinSparkle.lib")
+			message(FATAL_ERROR "WinSparkle not found for ${IMPORT_ARCH} architecture, run sparkleHelper's scripts/setup_fresh_env.sh (see ${SPARKLE_BASE_DIR}/README.md)")
 		endif()
 
 		add_library(winsparkle SHARED IMPORTED GLOBAL)

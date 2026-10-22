@@ -50,6 +50,7 @@ public:
 
 	/* Initialization methods */
 	// Must be called before any other methods, and as soon as possible
+	// 'signature' is the public key used to validate updates (only used on Windows, macOS reads it from Info.plist): Base64 EdDSA (ed25519) key, or legacy DSA PEM key (deprecated)
 	void init(std::string const& internalNumber, std::string const& signature) noexcept;
 	// Must be called to start the background check process, but not before the UI is visible and configuration methods have been called
 	void start() noexcept;
@@ -100,6 +101,7 @@ private:
 
 	// Private members
 	bool _initialized{ false };
+	std::string _initError{}; // Error during init(), reported to the LogHandler during start() (as it cannot be set before init())
 	bool _started{ false };
 	bool _checkForUpdates{ false };
 	std::string _appcastUrl{};

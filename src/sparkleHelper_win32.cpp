@@ -30,6 +30,47 @@
 #include <string>
 #include <stdexcept>
 
+#if !WIN_SPARKLE_CHECK_VERSION(0, 9, 0)
+#	error "WinSparkle 0.9.0 or later is required (EdDSA signatures support), run sparkleHelper's scripts/setup_fresh_env.sh again"
+#endif
+
+inline std::string trimWhitespaces(std::string const& str)
+{
+	auto const whitespaces = " \t\r\n";
+	auto const first = str.find_first_not_of(whitespaces);
+	if (first == std::string::npos)
+	{
+		return {};
+	}
+	auto const last = str.find_last_not_of(whitespaces);
+	return str.substr(first, last - first + 1);
+}
+
+inline bool setPublicKey(std::string const& publicKey)
+{
+	// Legacy DSA public key (PEM format)
+	if (publicKey.find("-----BEGIN") != std::string::npos)
+	{
+#if defined(__clang__) || defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#	pragma warning(push)
+#	pragma warning(disable : 4996)
+#endif
+		// DSA signatures are deprecated by WinSparkle (but still supported), keep supporting them until all projects have migrated to EdDSA
+		return win_sparkle_set_dsa_pub_pem(publicKey.c_str()) == 1;
+#if defined(__clang__) || defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#	pragma warning(pop)
+#endif
+	}
+
+	// EdDSA (ed25519) public key (base64 format)
+	return win_sparkle_set_eddsa_public_key(trimWhitespaces(publicKey).c_str()) == 1;
+}
+
 inline std::wstring utf8ToWideChar(std::string const& str)
 {
 	auto const sizeHint = str.size(); // WideChar size cannot exceed the number of multi-bytes
@@ -54,8 +95,13 @@ void Sparkle::init(std::string const& internalNumber, std::string const& signatu
 	{
 		// Set Language ID
 		win_sparkle_set_langid(::GetThreadUILanguage());
-		// Set our DSA public key
-		win_sparkle_set_dsa_pub_pem(signature.c_str());
+		// Set our public key
+		if (!setPublicKey(signature))
+		{
+			// Without a valid public key WinSparkle would install unsigned updates, so never initialize in that case
+			_initError = "Invalid public key, automatic update disabled";
+			return;
+		}
 		// Set internal number
 		try
 		{
@@ -122,6 +168,10 @@ void Sparkle::start() noexcept
 {
 	if (!_initialized)
 	{
+		if (!_initError.empty() && _logHandler)
+		{
+			_logHandler(_initError, LogLevel::Error);
+		}
 		return;
 	}
 
